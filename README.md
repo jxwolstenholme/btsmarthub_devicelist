@@ -10,13 +10,13 @@ as a list of dicts with the following keys:
 
 ### Installation
 ```sh
-$ pip install bt_smarthub_devicelist
+$ pip install btsmarthub_devicelist
 ```
 
 ### Example
 
 ```sh
-import bt_smarthub_devicelist
+import btsmarthub_devicelist
 devicelist = get_devicelist(router_ip='192.168.1.254', only_active_devices=True)
 print(devicelist)
 ```
