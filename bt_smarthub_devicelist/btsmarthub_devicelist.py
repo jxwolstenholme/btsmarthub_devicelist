@@ -147,11 +147,17 @@ def get_devicelist(router_ip='192.168.1.254', only_active_devices=False):
         _LOGGER.exception("Connection to the router timed out at second stage")
         return
     if deviceresponse.status_code == 200 and parse_active_devices_only==False:
-        devicelist = deviceresponse.json()['reply']['actions'][0]['callbacks'][0]['parameters']['value']
-        return parse_devicelist(devicelist)
+        try:
+            devicelist = deviceresponse.json()['reply']['actions'][0]['callbacks'][0]['parameters']['value']
+            return parse_devicelist(devicelist)
+        except IndexError:
+            pass
     elif deviceresponse.status_code == 200 and parse_active_devices_only==True:
-        devicelist = deviceresponse.json()['reply']['actions'][0]['callbacks'][0]['parameters']['value']
-        return parse_activedevicelist(devicelist)
+        try:
+            devicelist = deviceresponse.json()['reply']['actions'][0]['callbacks'][0]['parameters']['value']
+            return parse_activedevicelist(devicelist)
+        except IndexError:
+            pass
     else:
         _LOGGER.error("Invalid response from Smart Hub at second stage: %s", deviceresponse)
 
