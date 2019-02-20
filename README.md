@@ -1,13 +1,14 @@
-# BT Smarthub Device List v.0.1.3
+# BT Smarthub Device List v.0.1.4
 
-Python package allowing for a [BT Smart Hub](https://www.productsandservices.bt.com/broadband/smart-hub/) router to be queried for devices.
+Python package allowing for a [BT Smart Hub or BT Smart Hub 2](https://www.productsandservices.bt.com/broadband/smart-hub/) router to be queried for devices.
 The package will output either all devices stored in the router's memory or just the devices connected at present
 as a list of dicts with the following keys:
   - UserHostName (Device Name)
   - PhysAddress (MAC Address)
   - IPAddress (Last Known IP of Device)
   - Active (Boolean for if the Device is Connected to the Router)
-
+  
+For use with BT Smart Hub 2 set the is_smart_hub2 flag to True
 ### Installation
 ```sh
 $ pip install btsmarthub_devicelist
@@ -17,7 +18,7 @@ $ pip install btsmarthub_devicelist
 
 ```sh
 import btsmarthub_devicelist
-devicelist = btsmarthub_devicelist.get_devicelist(router_ip='192.168.1.254', only_active_devices=True)
+devicelist = btsmarthub_devicelist.get_devicelist(router_ip='192.168.1.254', only_active_devices=True,is_smarthub2=False)
 print(devicelist)
 ```
 

@@ -5,6 +5,7 @@ import math
 import random
 import hashlib
 import logging
+from bt_smarthub_devicelist import btsmarthub2_devicelist
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,8 +14,16 @@ def computeMD5hash(hashstring):
     m.update(hashstring.encode('utf-8'))
     return m.hexdigest()
 
+def get_devicelist(router_ip='192.168.1.254', only_active_devices=False, is_smarthub2=False):
 
-def get_devicelist(router_ip='192.168.1.254', only_active_devices=False):
+    if not is_smarthub2:
+        return get_devicelist_smarthub1(router_ip,only_active_devices)
+    else:
+        return btsmarthub2_devicelist.get_devicelist_smarthub2(router_ip,only_active_devices)
+
+
+
+def get_devicelist_smarthub1(router_ip='192.168.1.254', only_active_devices=False):
     parse_active_devices_only = only_active_devices
     authCookieObj = {"req_id": 1,
                      "sess_id": 0,
