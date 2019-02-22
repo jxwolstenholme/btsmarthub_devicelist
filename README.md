@@ -7,8 +7,9 @@ as a list of dicts with the following keys:
   - PhysAddress (MAC Address)
   - IPAddress (Last Known IP of Device)
   - Active (Boolean for if the Device is Connected to the Router)
-  
-For use with BT Smart Hub 2 set the is_smart_hub2 flag to True
+
+For use with BT Smart Hub 2 set the is_smart_hub2 flag to True, for a Smart Hub 1 set the flag as False. If you are not sure, leave the flag blank and it will attempt to determine the hub type.
+
 ### Installation
 ```sh
 $ pip install btsmarthub_devicelist
@@ -18,7 +19,7 @@ $ pip install btsmarthub_devicelist
 
 ```sh
 import btsmarthub_devicelist
-devicelist = btsmarthub_devicelist.get_devicelist(router_ip='192.168.1.254', only_active_devices=True,is_smarthub2=False)
+devicelist = btsmarthub_devicelist.get_devicelist(router_ip='192.168.1.254', only_active_devices=True,is_smarthub2=None)
 print(devicelist)
 ```
 
