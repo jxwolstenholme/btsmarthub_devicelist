@@ -9,18 +9,26 @@ from bt_smarthub_devicelist import btsmarthub2_devicelist
 
 _LOGGER = logging.getLogger(__name__)
 
+# constant used for timeout on trying to detect hub type
+_SMARTHUB2_WAIT_TIME=0.5
+
 def computeMD5hash(hashstring):
     m = hashlib.md5()
     m.update(hashstring.encode('utf-8'))
     return m.hexdigest()
 
-def get_devicelist(router_ip='192.168.1.254', only_active_devices=False, is_smarthub2=False):
 
-    if not is_smarthub2:
-        return get_devicelist_smarthub1(router_ip,only_active_devices)
+def get_devicelist(router_ip='192.168.1.254', only_active_devices=False, is_smarthub2=None):
+
+    # if we are not told if this is sm1 or sm2 then do detection
+    # Not happy with this as no concept of state - would be good to do this first time only
+    if is_smarthub2 is None:
+        is_smarthub2=btsmarthub2_devicelist.detect_smart_hub2(router_ip, _SMARTHUB2_WAIT_TIME)
+
+    if is_smarthub2:
+        return btsmarthub2_devicelist.get_devicelist_smarthub2(router_ip, only_active_devices)
     else:
-        return btsmarthub2_devicelist.get_devicelist_smarthub2(router_ip,only_active_devices)
-
+        return get_devicelist_smarthub1(router_ip, only_active_devices)
 
 
 def get_devicelist_smarthub1(router_ip='192.168.1.254', only_active_devices=False):
@@ -171,13 +179,12 @@ def get_devicelist_smarthub1(router_ip='192.168.1.254', only_active_devices=Fals
         _LOGGER.error("Invalid response from Smart Hub at second stage: %s", deviceresponse)
 
 
-
-
 def parse_devicelist(device_list):
     keys = {'UserHostName', 'PhysAddress', 'IPAddress', 'Active'}
     devices = [{k: v for k, v in i.items() if k in keys} for i in device_list]
 
     return devices
+
 
 def parse_activedevicelist(device_list):
     keys = {'UserHostName', 'PhysAddress', 'IPAddress', 'Active'}
