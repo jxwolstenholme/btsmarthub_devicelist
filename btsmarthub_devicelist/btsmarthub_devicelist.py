@@ -5,7 +5,7 @@ import math
 import random
 import hashlib
 import logging
-from bt_smarthub_devicelist import btsmarthub2_devicelist
+from . import btsmarthub2_devicelist
 
 _LOGGER = logging.getLogger(__name__)
 

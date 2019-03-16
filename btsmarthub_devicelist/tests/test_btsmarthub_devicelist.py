@@ -1,8 +1,8 @@
 """The tests for the btsmarthub devicelist."""
 import unittest
 
-from bt_smarthub_devicelist import btsmarthub_devicelist
-from bt_smarthub_devicelist import btsmarthub2_devicelist
+from btsmarthub_devicelist import btsmarthub_devicelist
+from btsmarthub_devicelist import btsmarthub2_devicelist
 
 
 class TestBTSmartHub(unittest.TestCase):
