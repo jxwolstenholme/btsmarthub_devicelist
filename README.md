@@ -19,7 +19,12 @@ $ pip install btsmarthub_devicelist
 
 ```sh
 import btsmarthub_devicelist
-devicelist = btsmarthub_devicelist.get_devicelist(router_ip='192.168.1.254', only_active_devices=True,is_smarthub2=None)
+devicelist = btsmarthub_devicelist.get_devicelist(
+    router_ip='192.168.1.254',
+    only_active_devices=True,
+    is_smarthub2=None,
+)
+
 print(devicelist)
 ```
 
