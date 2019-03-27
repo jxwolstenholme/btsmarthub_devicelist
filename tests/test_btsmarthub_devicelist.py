@@ -13,11 +13,7 @@ class TestBTSmartHub(unittest.TestCase):
         self.assertGreaterEqual(len(all_devices), len(connected_devices))
 
     def test_btsmarthub2_detection_google(self):
-        self.assertFalse(btsmarthub2_devicelist.detect_smart_hub2('www.google.com', 0.5))
-
-    def test_btsmarthub2_detection_google_short_timeout(self):
-        self.assertFalse(btsmarthub2_devicelist.detect_smart_hub2('www.google.com', 0.001))
-
+        self.assertFalse(BTSmartHub(router_ip="www.google.com"))
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBTSmartHub)
