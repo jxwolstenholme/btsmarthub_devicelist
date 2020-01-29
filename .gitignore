@@ -2,3 +2,16 @@
 *.pyc
 *__pycache__*
 *.egg-info
+
+# IntelliJ IDEA
+.idea
+*.iml
+
+# venv stuff
+pyvenv.cfg
+pip-selfcheck.json
+venv
+.venv
+Pipfile*
+share/*
+Scripts/
