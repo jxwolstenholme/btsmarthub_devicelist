@@ -10,6 +10,15 @@ as a list of dicts with the following keys:
   
 For use with a BT Smart Hub 2, set the smarthub_model flag to 2, for a BT Smart Hub 1 set the smarthub_model flag to 1. If you are not sure, leave the flag blank and it will attempt to determine the hub type.
 
+If the router is a BT Smart Hub 2 the additional keys will be populated:
+ - ConnectionType (Ether | 2G | 5G  fixed/wifi 2.4Ghz/wifi 5Ghz)
+ - ParentName (Name of parent device is connecting through - eg wifi disks name)
+ - ParentPhysAddress ( MAC Address of the parent)
+ 
+ NB. If a device hasn't been connected for a while, is a disk or the router itself then the additional fields may be set to 'Unknown'
+ 
+ 
+
 Seeking PR for the following devices:
 
 BT Smart Hub (Home Hub 6B)
