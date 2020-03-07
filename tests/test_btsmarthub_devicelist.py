@@ -13,16 +13,16 @@ _LOGGER = logging.getLogger(__name__)
 class TestBTSmartHub(unittest.TestCase):
 
     # example bodies from smart hub 2 requests so we can test away from physical/network devices
-    smarthubb2_cgi_owl_body="";
-    smarthubb2_cgi_basicMyDevice = "";
+    smarthubb2_cgi_owl_body = ""
+    smarthubb2_cgi_basicMyDevice = ""
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         """ Read some faked data into body strings so we can test without a router present"""
         with open('fixtures/smarthub2/cgi_owl.js', 'r') as file:
-            self.smarthubb2_cgi_owl_body = file.read()
+            cls.smarthubb2_cgi_owl_body = file.read()
         with open('fixtures/smarthub2/cgi_basicMyDevice.js', 'r') as file:
-            self.smarthubb2_cgi_basicMyDevice = file.read()
+            cls.smarthubb2_cgi_basicMyDevice = file.read()
 
     def setup_fake_smarthub2(self):
         # initialise mock - make sure smarthub 2 is ok....
@@ -31,7 +31,6 @@ class TestBTSmartHub(unittest.TestCase):
                       status=200)
         responses.add(responses.GET, 'http://smarthub2fakedrouter/cgi/cgi_basicMyDevice.js',
                       body=self.smarthubb2_cgi_basicMyDevice, status=200)
-
 
     @responses.activate
     def test_btsmarthub2_getdevicelist(self):
@@ -50,42 +49,45 @@ class TestBTSmartHub(unittest.TestCase):
         #                   device.get("IPAddress")+" via "+device.get("ConnectionType")+" through parent "+
         #                   device.get("ParentName")+"("+device.get("ParentPhysAddress")+")")
 
-
     @responses.activate
     def test_disk_dictionary(self):
         self.setup_fake_smarthub2()
 
-        disks = BTSmartHub(router_ip='smarthub2fakedrouter').get_disks();
+        disks = BTSmartHub(router_ip='smarthub2fakedrouter').get_disks()
         # test data has 2 disks and a router.
-        self.assertEqual(3,len(disks))
+        self.assertEqual(3, len(disks))
 
     @responses.activate
     def test_stations_load(self):
         self.setup_fake_smarthub2()
 
-        stations=BTSmartHub(router_ip='smarthub2fakedrouter').get_stations();
+        stations = BTSmartHub(router_ip='smarthub2fakedrouter').get_stations()
 
         # test data has known count of stations...
-        self.assertEqual(25,len(stations))
+        self.assertEqual(25, len(stations))
 
         # grab sone counts to test connection detection
-        ether_count=0;
-        g2_count=0;
-        g5_count=0;
+        ether_count = 0
+        g2_count = 0
+        g5_count = 0
+
+        # for key in stations:
+        #     _LOGGER.error("Name "+stations[key].get("station_name")+
+        #                  "("+stations[key].get("station_mac")+
+        #                  ") via "+stations[key].get("connect_type")+
+        #                  " ("+stations[key].get("parent_id")+")")
 
         for key in stations:
-        #    _LOGGER.error("Name "+stations[key].get("station_name")+"("+stations[key].get("station_mac")+") via "+stations[key].get("connect_type")+" ("+stations[key].get("parent_id")+")")
-            if stations[key].get("connect_type") == "Ether" :
-                ether_count=ether_count+1
-            elif  stations[key].get("connect_type") == "2.4G" :
-                g2_count=g2_count+1
+            if stations[key].get("connect_type") == "Ether":
+                ether_count = ether_count+1
+            elif stations[key].get("connect_type") == "2.4G":
+                g2_count = g2_count+1
             elif stations[key].get("connect_type") == "5G":
-                g5_count=g5_count+1
+                g5_count = g5_count+1
 
-        self.assertEqual(8,ether_count)
-        self.assertEqual(7,g2_count)
-        self.assertEqual(10,g5_count)
-
+        self.assertEqual(8, ether_count)
+        self.assertEqual(7, g2_count)
+        self.assertEqual(10, g5_count)
 
     @responses.activate
     def test_btsmarthub2_with_mocked_smarthub2_present(self):
@@ -104,10 +106,9 @@ class TestBTSmartHub(unittest.TestCase):
 
         self.assertTrue(1 == BTSmartHub(router_ip="smarthub1fakedrouter").autodetect_smarthub_model())
 
-
     def test_btsmarthub2_detection_neither_router_present(self):
-       self.assertRaises(requests.exceptions.HTTPError, BTSmartHub(router_ip="www.google.com").autodetect_smarthub_model())
-
+        self.assertRaises(requests.exceptions.HTTPError,
+                          BTSmartHub(router_ip="www.google.com").autodetect_smarthub_model())
 
 
 if __name__ == '__main__':

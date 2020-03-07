@@ -5,7 +5,6 @@ import math
 import random
 import hashlib
 import logging
-import re
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -213,7 +212,6 @@ class BTSmartHub(object):
         else:
             _LOGGER.error("Invalid response from Smart Hub at second stage: %s", device_response)
 
-
     def get_body_content(self,  url_to_read):
         """
         common code to read url an return the read body
@@ -234,13 +232,12 @@ class BTSmartHub(object):
             _LOGGER.error("Invalid response from Smart Hub: %s", response)
             _LOGGER.debug("It is likely that %s is the wrong router model", str(self.smarthub_model))
 
-
         # and remove all newlines
         body = body.replace("\n", "")
 
         return body
 
-    def extract_js_variable_to_json_string(self,body,js_marker,labels):
+    def extract_js_variable_to_json_string(self, body, js_marker, labels):
         """ Pull out the variable we are looking for, mangle the js into json string by replacing
         labels/booleans/str types etc. Then return json string.
         :param body: content of overall js page.
@@ -249,8 +246,8 @@ class BTSmartHub(object):
         :return: json string representing the javascript.
         """
         # search for our var start.....and grab substring out....
-        start_pos = body.find(js_marker);
-        end_pos = body.find(';', start_pos);
+        start_pos = body.find(js_marker)
+        end_pos = body.find(';', start_pos)
         sub_body = body[start_pos + len(js_marker):end_pos]
 
         # do basic js->json conversion.
@@ -277,20 +274,19 @@ class BTSmartHub(object):
 
         # labels in the extensions jscript
         extension_labels = [
-            "station_mac","station_name","alias_name","station_ip",
-            "parent_id","connect_type","link_rate","link_rate_max",
-            "mode","signal_strength","signal_strength_max",
-            "signal_strength_min","pid","online",
-            "last_connect","ipv6_ip","note","as",
-            "ldur","lddr","rt","bs","br",
-            "txc","rxc","es","rtc","frc","rc","mrc","it"]
-
+            "station_mac", "station_name", "alias_name", "station_ip",
+            "parent_id", "connect_type", "link_rate", "link_rate_max",
+            "mode", "signal_strength", "signal_strength_max",
+            "signal_strength_min", "pid", "online",
+            "last_connect", "ipv6_ip", "note", "as",
+            "ldur", "lddr", "rt", "bs", "br",
+            "txc", "rxc", "es", "rtc", "frc", "rc", "mrc", "it"]
 
         # use common method to pull body data for our url
         body = self.get_body_content(request_url)
 
         # convert to json str
-        json_data=self.extract_js_variable_to_json_string(body,'owl_station=',extension_labels)
+        json_data = self.extract_js_variable_to_json_string(body, 'owl_station=', extension_labels)
 
         # read into obj model using json
         stations = json.loads(json_data)
@@ -298,13 +294,12 @@ class BTSmartHub(object):
         # last item is null....remove it
         stations.pop()
 
-        station_dictionary={};
+        station_dictionary = {}
 
         for station in stations:
-            station_dictionary[station.get("station_mac")]=station
+            station_dictionary[station.get("station_mac")] = station
 
         return station_dictionary
-
 
     def get_disks(self):
         """
@@ -341,12 +336,11 @@ class BTSmartHub(object):
         disks.pop()
 
         # we want to return a dictionary of mac -> name
-        disk_dictionary={}
+        disk_dictionary = {}
         for disk in disks:
-            disk_dictionary[disk.get("device_id")]=disk.get("device_name")
+            disk_dictionary[disk.get("device_id")] = disk.get("device_name")
 
         return disk_dictionary
-
 
     def get_devicelist_smarthub_2(self, only_active_devices):
         """
@@ -354,16 +348,13 @@ class BTSmartHub(object):
         :param only_active_devices: if set, only recently active devices will be returned.
         :return:
         """
-
         # load the disks and stations...so we can enrich data.
-        disks=self.get_disks()
-        stations=self.get_stations()
-
+        disks = self.get_disks()
+        stations = self.get_stations()
 
         # Url that returns js with variable in it showing all the device status
         device_request_url = 'http://' + self.router_ip + '/cgi/cgi_basicMyDevice.js'
         body = self.get_body_content(device_request_url)
-
 
         # list of labels that the device returns in the javascript style declaration
         device_labels = [
@@ -407,19 +398,19 @@ class BTSmartHub(object):
         # # we want to add how things are connected, and the parent info of what they connect through.
         # for device in devices:
         for device in devices:
-            device_mac=device.get("PhysAddress")
-            if device_mac in stations :
-                station=stations[device_mac]
-                connection_type=station.get('connect_type')
-                parent_mac=station.get('parent_id')
-                if parent_mac in disks :
-                    parent_name=disks[parent_mac]
-                else :
-                    parent_name="Unknown"
-            else :
-                connection_type="Unknown"
-                parent_mac="Unknown"
-                parent_name="Unknown"
+            device_mac = device.get("PhysAddress")
+            if device_mac in stations:
+                station = stations[device_mac]
+                connection_type = station.get('connect_type')
+                parent_mac = station.get('parent_id')
+                if parent_mac in disks:
+                    parent_name = disks[parent_mac]
+                else:
+                    parent_name = "Unknown"
+            else:
+                connection_type = "Unknown"
+                parent_mac = "Unknown"
+                parent_name = "Unknown"
 
             device['ConnectionType'] = connection_type
             device['ParentPhysAddress'] = parent_mac
