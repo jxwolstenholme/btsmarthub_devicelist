@@ -19,9 +19,9 @@ class TestBTSmartHub(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """ Read some faked data into body strings so we can test without a router present"""
-        with open('fixtures/smarthub2/cgi_owl.js', 'r') as file:
+        with open('tests/fixtures/smarthub2/cgi_owl.js', 'r') as file:
             cls.smarthubb2_cgi_owl_body = file.read()
-        with open('fixtures/smarthub2/cgi_basicMyDevice.js', 'r') as file:
+        with open('tests/fixtures/smarthub2/cgi_basicMyDevice.js', 'r') as file:
             cls.smarthubb2_cgi_basicMyDevice = file.read()
 
     def setup_fake_smarthub2(self):
@@ -33,7 +33,17 @@ class TestBTSmartHub(unittest.TestCase):
                       body=self.smarthubb2_cgi_basicMyDevice, status=200)
 
     @responses.activate
-    def test_btsmarthub2_getdevicelist(self):
+    def test_btsmarthub2_getdevicelist__no_active_flag_returns_only_active(self):
+        self.setup_fake_smarthub2()
+
+        devices = BTSmartHub(router_ip='smarthub2fakedrouter').get_devicelist()
+
+        for device in devices:
+            self.assertTrue( device.get("Active"))
+
+
+    @responses.activate
+    def test_btsmarthub2_getdevicelist_no_connection_details(self):
         self.setup_fake_smarthub2()
 
         connected_devices = BTSmartHub(router_ip='smarthub2fakedrouter').get_devicelist(only_active_devices=True)
@@ -41,17 +51,38 @@ class TestBTSmartHub(unittest.TestCase):
         self.assertGreaterEqual(len(all_devices), len(connected_devices))
 
         self.assertEqual(8, len(connected_devices))
-        self.assertEqual(12, len(all_devices))
+        self.assertEqual(13, len(all_devices))
 
-        # for device in connected_devices:
-        #     _LOGGER.error(
-        #                   device.get("UserHostName")+"("+device.get("PhysAddress")+") on "+
-        #                   device.get("IPAddress")+" via "+device.get("ConnectionType")+" through parent "+
-        #                   device.get("ParentName")+"("+device.get("ParentPhysAddress")+")")
+        # Confirm we didn't look up the addional connection information when include_connections not set
+        for device in all_devices:
+            self.assertTrue(None is device.get("ParentName"))
+            self.assertTrue(None is device.get("ConnectionType"))
+            self.assertTrue(None is device.get("ParentPhysAddress"))
+
+    @responses.activate
+    def test_btsmarthub2_getdevicelist_with_connection_details(self):
+        self.setup_fake_smarthub2()
+
+        connected_devices = BTSmartHub(router_ip='smarthub2fakedrouter').get_devicelist(only_active_devices=True,
+                                                                                        include_connections=True)
+        all_devices = BTSmartHub(router_ip='smarthub2fakedrouter').get_devicelist(only_active_devices=False,
+                                                                                  include_connections=True)
+        self.assertGreaterEqual(len(all_devices), len(connected_devices))
+
+        self.assertEqual(8, len(connected_devices))
+        self.assertEqual(13, len(all_devices))
+
+        # client with name 'FAKEDDISKPAR' has parent disk that doesn't exist, so should be unknown.
+        for device in all_devices:
+            if device.get("UserHostName") == "FAKEDDISKPAR":
+                self.assertEqual("Unknown", device.get("ParentName"))
+
+
 
     @responses.activate
     def test_disk_dictionary(self):
         self.setup_fake_smarthub2()
+
 
         disks = BTSmartHub(router_ip='smarthub2fakedrouter').get_disks()
         # test data has 2 disks and a router.

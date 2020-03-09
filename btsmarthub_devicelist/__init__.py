@@ -44,7 +44,7 @@ class BTSmartHub(object):
         else:
             self.smarthub_model = smarthub_model
 
-    def get_devicelist(self, only_active_devices=None):
+    def get_devicelist(self, only_active_devices=None,include_connections=None):
 
         if only_active_devices is None:
             only_active_devices = True
@@ -57,7 +57,8 @@ class BTSmartHub(object):
             devicelist = self.get_devicelist_smarthub_1(only_active_devices=only_active_devices)
             return devicelist
         elif self.smarthub_model == 2:
-            devicelist = self.get_devicelist_smarthub_2(only_active_devices=only_active_devices)
+            devicelist = self.get_devicelist_smarthub_2(only_active_devices=only_active_devices,
+                                                        include_connections=include_connections)
             return devicelist
         else:
             _LOGGER.error("Not sure which smarthub to query...")
@@ -263,14 +264,19 @@ class BTSmartHub(object):
 
         return cleaned_jscript_array
 
-    def get_stations(self):
+    def get_stations(self, owl_body=None):
         """
         Get the dict of stations (devices connected and info pertaining to how they connect)
+        :param owl_body: The contents of the owl url - if not set we will look it up.
         :return: dictionary of stations mac -> station info.
         """
 
-        # Url that returns js with variable in it showing all the device status
-        request_url = 'http://' + self.router_ip + '/cgi/cgi_owl.js'
+        if owl_body is None:
+            # load the disks and stations...so we can enrich data.
+            request_url = 'http://' + self.router_ip + '/cgi/cgi_owl.js'
+            # use common method to pull body data for our url
+            owl_body = self.get_body_content(request_url)
+
 
         # labels in the extensions jscript
         extension_labels = [
@@ -282,11 +288,9 @@ class BTSmartHub(object):
             "ldur", "lddr", "rt", "bs", "br",
             "txc", "rxc", "es", "rtc", "frc", "rc", "mrc", "it"]
 
-        # use common method to pull body data for our url
-        body = self.get_body_content(request_url)
 
         # convert to json str
-        json_data = self.extract_js_variable_to_json_string(body, 'owl_station=', extension_labels)
+        json_data = self.extract_js_variable_to_json_string(owl_body, 'owl_station=', extension_labels)
 
         # read into obj model using json
         stations = json.loads(json_data)
@@ -301,15 +305,21 @@ class BTSmartHub(object):
 
         return station_dictionary
 
-    def get_disks(self):
+
+    def get_disks(self, owl_body=None):
         """
         Get the set of disks (extenders) and the info on the router.
         Used to figure out who is connected to what.
+        :param owl_body: if not set we will read from URL.
         :return: dict of mac address -> extender name.
         """
 
-        # Url that returns js with variable in it showing all the device status
-        request_url = 'http://' + self.router_ip + '/cgi/cgi_owl.js'
+        if owl_body is None:
+            # load the disks and stations...so we can enrich data.
+            request_url = 'http://' + self.router_ip + '/cgi/cgi_owl.js'
+            # use common method to pull body data for our url
+            owl_body = self.get_body_content(request_url)
+
 
         # labels in the extensions jscript
         extension_labels = [
@@ -323,11 +333,8 @@ class BTSmartHub(object):
             "node_num_max", "linkmode", "sta_num_max", "cpuU", "cpuS", "cpuI", "memT", "memF", "memU", "proc_n",
             "hub_status", "fud", "type", "lsd"]
 
-        # use common method to pull body data for our url
-        body = self.get_body_content(request_url)
-
         # convert to json str
-        json_data = self.extract_js_variable_to_json_string(body, 'owl_tplg=', extension_labels)
+        json_data = self.extract_js_variable_to_json_string(owl_body, 'owl_tplg=', extension_labels)
 
         # read into obj model using json
         disks = json.loads(json_data)
@@ -342,15 +349,13 @@ class BTSmartHub(object):
 
         return disk_dictionary
 
-    def get_devicelist_smarthub_2(self, only_active_devices):
+    def get_devicelist_smarthub_2(self, only_active_devices, include_connections):
         """
         Query a Smarthub 2 for list of devices.
         :param only_active_devices: if set, only recently active devices will be returned.
+        :param include_connections: if set we additionally grab the disk/AP clients connect through.
         :return:
         """
-        # load the disks and stations...so we can enrich data.
-        disks = self.get_disks()
-        stations = self.get_stations()
 
         # Url that returns js with variable in it showing all the device status
         device_request_url = 'http://' + self.router_ip + '/cgi/cgi_basicMyDevice.js'
@@ -397,24 +402,32 @@ class BTSmartHub(object):
 
         # # we want to add how things are connected, and the parent info of what they connect through.
         # for device in devices:
-        for device in devices:
-            device_mac = device.get("PhysAddress")
-            if device_mac in stations:
-                station = stations[device_mac]
-                connection_type = station.get('connect_type')
-                parent_mac = station.get('parent_id')
-                if parent_mac in disks:
-                    parent_name = disks[parent_mac]
-                else:
-                    parent_name = "Unknown"
-            else:
-                connection_type = "Unknown"
-                parent_mac = "Unknown"
-                parent_name = "Unknown"
+        if include_connections is True:
+            # load the disks and stations...so we can enrich data.
+            request_url = 'http://' + self.router_ip + '/cgi/cgi_owl.js'
+            # use common method to pull body data for our url
+            owl_body = self.get_body_content(request_url)
+            disks = self.get_disks(owl_body)
+            stations = self.get_stations(owl_body)
 
-            device['ConnectionType'] = connection_type
-            device['ParentPhysAddress'] = parent_mac
-            device['ParentName'] = parent_name
+            for device in devices:
+                device_mac = device.get("PhysAddress")
+                if device_mac in stations:
+                    station = stations[device_mac]
+                    connection_type = station.get('connect_type')
+                    parent_mac = station.get('parent_id')
+                    if parent_mac in disks:
+                        parent_name = disks[parent_mac]
+                    else:
+                        parent_name = "Unknown"
+                else:
+                    connection_type = "Unknown"
+                    parent_mac = "Unknown"
+                    parent_name = "Unknown"
+
+                device['ConnectionType'] = connection_type
+                device['ParentPhysAddress'] = parent_mac
+                device['ParentName'] = parent_name
 
         # shrink them down
         if only_active_devices is False:
