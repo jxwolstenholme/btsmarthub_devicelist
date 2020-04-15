@@ -56,7 +56,7 @@ class BTSmartHub(object):
         if self.smarthub_model == 1:
             devicelist = self.get_devicelist_smarthub_1(only_active_devices=only_active_devices)
             return devicelist
-        elif self.smarthub_model == 2:
+        elif self.smarthub_model in (2, "EE"):
             devicelist = self.get_devicelist_smarthub_2(only_active_devices=only_active_devices,
                                                         include_connections=include_connections)
             return devicelist
@@ -248,8 +248,8 @@ class BTSmartHub(object):
         """
         # search for our var start.....and grab substring out....
         start_pos = body.find(js_marker)
-        end_pos = body.find(';', start_pos)
-        sub_body = body[start_pos + len(js_marker):end_pos]
+        end_pos = body.find('];', start_pos)
+        sub_body = body[start_pos + len(js_marker):end_pos+1]
 
         # do basic js->json conversion.
         # to allow json to read this, add quotes around the item labels.
@@ -359,6 +359,8 @@ class BTSmartHub(object):
 
         # Url that returns js with variable in it showing all the device status
         device_request_url = 'http://' + self.router_ip + '/cgi/cgi_basicMyDevice.js'
+        if self.smarthub_model == "EE":
+            device_request_url = 'http://' + self.router_ip + '/cgi/cgi_myNetwork.js'
         body = self.get_body_content(device_request_url)
 
         # list of labels that the device returns in the javascript style declaration
@@ -475,7 +477,19 @@ class BTSmartHub(object):
         _LOGGER.debug("Connection to the router (%s) failed because of %fs ", self.router_ip,
                       response.status_code)
 
+        # On failure, determine if router is an EE Smarthub
+        request_url = 'http://' + self.router_ip + '/cgi/cgi_myNetwork.js'
+        try:
+            response = requests.get(request_url, timeout=wait_time)
+        except requests.exceptions.Timeout:
+            pass
+        if response.status_code == 200:
+            _LOGGER.info("Router (%s) appears to be an EE Smart Hub", self.router_ip)
+            return "EE"
         # On failure, determine if router is Smarthub 1
+        _LOGGER.debug("Router (%s) does not appear to be an EE Smart Hub", self.router_ip)
+        _LOGGER.debug("Connection to the router (%s) failed because of %fs ", self.router_ip,
+                      response.status_code)
         request_url = 'http://' + self.router_ip + '/gui/#/home/myNetwork/devices'
         response = requests.get(request_url)
         if response.status_code == 200:

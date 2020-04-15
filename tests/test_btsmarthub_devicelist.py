@@ -32,6 +32,13 @@ class TestBTSmartHub(unittest.TestCase):
         responses.add(responses.GET, 'http://smarthub2fakedrouter/cgi/cgi_basicMyDevice.js',
                       body=self.smarthubb2_cgi_basicMyDevice, status=200)
 
+    def setup_fake_eesmarthub(self):
+         # initialise mock - make sure EE smarthub 2 is ok....
+        responses.add(responses.GET, 'http://eesmarthubfakedrouter/cgi/cgi_basicMyDevice.js', status=404)
+        responses.add(responses.GET, 'http://eesmarthubfakedrouter/cgi/cgi_owl.js', status=404)
+        responses.add(responses.GET, 'http://eesmarthubfakedrouter/cgi/cgi_myNetwork.js',
+                      body=self.smarthubb2_cgi_basicMyDevice, status=200)
+
     @responses.activate
     def test_btsmarthub2_getdevicelist__no_active_flag_returns_only_active(self):
         self.setup_fake_smarthub2()
@@ -41,6 +48,14 @@ class TestBTSmartHub(unittest.TestCase):
         for device in devices:
             self.assertTrue( device.get("Active"))
 
+    @responses.activate
+    def test_eesmarthub_getdevicelist__no_active_flag_returns_only_active(self):
+        self.setup_fake_eesmarthub()
+
+        devices = BTSmartHub(router_ip='eesmarthubfakedrouter').get_devicelist()
+
+        for device in devices:
+            self.assertTrue( device.get("Active"))
 
     @responses.activate
     def test_btsmarthub2_getdevicelist_no_connection_details(self):
@@ -129,9 +144,20 @@ class TestBTSmartHub(unittest.TestCase):
         self.assertTrue(2 == BTSmartHub(router_ip="smarthub2fakedrouter").autodetect_smarthub_model())
 
     @responses.activate
+    def test_eesmarthub_with_mocked_eesmarthub_present(self):
+        # initialise mock - make sure smarthub 2 fails....
+        responses.add(responses.GET, 'http://eesmarthubfakedrouter/cgi/cgi_basicMyDevice.js', status=400)
+        # initialise mock - make sure EE smarthub fails....
+        responses.add(responses.GET, 'http://eesmarthubfakedrouter/cgi/cgi_myNetwork.js', status=200)
+
+        self.assertTrue("EE" == BTSmartHub(router_ip="eesmarthubfakedrouter").autodetect_smarthub_model())
+
+    @responses.activate
     def test_btsmarthub1_with_mocked_smarthub1_present(self):
         # initialise mock - make sure smarthub 2 fails....
         responses.add(responses.GET, 'http://smarthub1fakedrouter/cgi/cgi_basicMyDevice.js', status=400)
+        # initialise mock - make sure EE smarthub fails....
+        responses.add(responses.GET, 'http://smarthub1fakedrouter/cgi/cgi_myNetwork.js', status=400)
         # initialise mock - make sure smarthub 1 doesn't fail
         responses.add(responses.GET, 'http://smarthub1fakedrouter/gui/#/home/myNetwork/devices', status=200)
 
