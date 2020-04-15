@@ -463,27 +463,24 @@ class BTSmartHub(object):
         _LOGGER.info("Trying to determine router model at %s", self.router_ip)
 
         # First try to determine if router is Smarthub 2
+        request_url = 'http://' + self.router_ip + '/cgi/cgi_basicMyDevice.js'
         try:
-            request_url = 'http://' + self.router_ip + '/cgi/cgi_basicMyDevice.js'
             response = requests.get(request_url, timeout=wait_time)
-            response.raise_for_status()
-            if response.status_code == 200:
-                _LOGGER.info("Router (%s) appears to be a Smart Hub 2 ", self.router_ip)
-                return 2
+        except requests.exceptions.Timeout:
+            pass
+        if response.status_code == 200:
+            _LOGGER.info("Router (%s) appears to be a Smart Hub 2 ", self.router_ip)
+            return 2
+        _LOGGER.debug("Router (%s) does not appear to be a Smart Hub 2", self.router_ip)
+        _LOGGER.debug("Connection to the router (%s) failed because of %fs ", self.router_ip,
+                      response.status_code)
+
         # On failure, determine if router is Smarthub 1
-        except (requests.exceptions.HTTPError, requests.exceptions.Timeout) as e:
-            _LOGGER.debug("Router (%s) does not appear to be a Smart Hub 2", self.router_ip)
-            _LOGGER.debug("Connection to the router (%s) failed because of %fs ", self.router_ip,
-                          e.response.status_code)
-            try:
-                request_url = 'http://' + self.router_ip + '/gui/#/home/myNetwork/devices'
-                response = requests.get(request_url)
-                response.raise_for_status()
-                if response.status_code == 200:
-                    _LOGGER.info("Router (%s) appears to be a Smart Hub 1 ", self.router_ip)
-                    return 1
-            # I both fail, assume that router is not a Smarthub
-            except requests.exceptions.HTTPError:
-                _LOGGER.error("Could not autodetect Smart Hub model at %s", self.router_ip)
-                _LOGGER.error("Please see the Readme for supported models")
-                pass
+        request_url = 'http://' + self.router_ip + '/gui/#/home/myNetwork/devices'
+        response = requests.get(request_url)
+        if response.status_code == 200:
+            _LOGGER.info("Router (%s) appears to be a Smart Hub 1 ", self.router_ip)
+            return 1
+        # If both fail, assume that router is not a Smarthub
+        _LOGGER.error("Could not autodetect Smart Hub model at %s", self.router_ip)
+        _LOGGER.error("Please see the Readme for supported models")
