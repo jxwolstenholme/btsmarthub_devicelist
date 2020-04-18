@@ -404,7 +404,7 @@ class BTSmartHub(object):
 
         # # we want to add how things are connected, and the parent info of what they connect through.
         # for device in devices:
-        if include_connections is True:
+        if self.smarthub_model == 2 and include_connections is True:
             # load the disks and stations...so we can enrich data.
             request_url = 'http://' + self.router_ip + '/cgi/cgi_owl.js'
             # use common method to pull body data for our url
