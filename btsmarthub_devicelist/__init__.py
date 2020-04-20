@@ -56,7 +56,7 @@ class BTSmartHub(object):
         if self.smarthub_model == 1:
             devicelist = self.get_devicelist_smarthub_1(only_active_devices=only_active_devices)
             return devicelist
-        elif self.smarthub_model == 2:
+        elif self.smarthub_model in (2, "EE"):
             devicelist = self.get_devicelist_smarthub_2(only_active_devices=only_active_devices,
                                                         include_connections=include_connections)
             return devicelist
@@ -248,8 +248,8 @@ class BTSmartHub(object):
         """
         # search for our var start.....and grab substring out....
         start_pos = body.find(js_marker)
-        end_pos = body.find(';', start_pos)
-        sub_body = body[start_pos + len(js_marker):end_pos]
+        end_pos = body.find('];', start_pos)
+        sub_body = body[start_pos + len(js_marker):end_pos+1]
 
         # do basic js->json conversion.
         # to allow json to read this, add quotes around the item labels.
@@ -359,6 +359,8 @@ class BTSmartHub(object):
 
         # Url that returns js with variable in it showing all the device status
         device_request_url = 'http://' + self.router_ip + '/cgi/cgi_basicMyDevice.js'
+        if self.smarthub_model == "EE":
+            device_request_url = 'http://' + self.router_ip + '/cgi/cgi_myNetwork.js'
         body = self.get_body_content(device_request_url)
 
         # list of labels that the device returns in the javascript style declaration
@@ -402,7 +404,7 @@ class BTSmartHub(object):
 
         # # we want to add how things are connected, and the parent info of what they connect through.
         # for device in devices:
-        if include_connections is True:
+        if self.smarthub_model == 2 and include_connections is True:
             # load the disks and stations...so we can enrich data.
             request_url = 'http://' + self.router_ip + '/cgi/cgi_owl.js'
             # use common method to pull body data for our url
@@ -463,27 +465,36 @@ class BTSmartHub(object):
         _LOGGER.info("Trying to determine router model at %s", self.router_ip)
 
         # First try to determine if router is Smarthub 2
+        request_url = 'http://' + self.router_ip + '/cgi/cgi_basicMyDevice.js'
         try:
-            request_url = 'http://' + self.router_ip + '/cgi/cgi_basicMyDevice.js'
             response = requests.get(request_url, timeout=wait_time)
-            response.raise_for_status()
-            if response.status_code == 200:
-                _LOGGER.info("Router (%s) appears to be a Smart Hub 2 ", self.router_ip)
-                return 2
+        except requests.exceptions.Timeout:
+            pass
+        if response.status_code == 200:
+            _LOGGER.info("Router (%s) appears to be a Smart Hub 2 ", self.router_ip)
+            return 2
+        _LOGGER.debug("Router (%s) does not appear to be a Smart Hub 2", self.router_ip)
+        _LOGGER.debug("Connection to the router (%s) failed because of %fs ", self.router_ip,
+                      response.status_code)
+
+        # On failure, determine if router is an EE Smarthub
+        request_url = 'http://' + self.router_ip + '/cgi/cgi_myNetwork.js'
+        try:
+            response = requests.get(request_url, timeout=wait_time)
+        except requests.exceptions.Timeout:
+            pass
+        if response.status_code == 200:
+            _LOGGER.info("Router (%s) appears to be an EE Smart Hub", self.router_ip)
+            return "EE"
         # On failure, determine if router is Smarthub 1
-        except (requests.exceptions.HTTPError, requests.exceptions.Timeout) as e:
-            _LOGGER.debug("Router (%s) does not appear to be a Smart Hub 2", self.router_ip)
-            _LOGGER.debug("Connection to the router (%s) failed because of %fs ", self.router_ip,
-                          e.response.status_code)
-            try:
-                request_url = 'http://' + self.router_ip + '/gui/#/home/myNetwork/devices'
-                response = requests.get(request_url)
-                response.raise_for_status()
-                if response.status_code == 200:
-                    _LOGGER.info("Router (%s) appears to be a Smart Hub 1 ", self.router_ip)
-                    return 1
-            # I both fail, assume that router is not a Smarthub
-            except requests.exceptions.HTTPError:
-                _LOGGER.error("Could not autodetect Smart Hub model at %s", self.router_ip)
-                _LOGGER.error("Please see the Readme for supported models")
-                pass
+        _LOGGER.debug("Router (%s) does not appear to be an EE Smart Hub", self.router_ip)
+        _LOGGER.debug("Connection to the router (%s) failed because of %fs ", self.router_ip,
+                      response.status_code)
+        request_url = 'http://' + self.router_ip + '/gui/#/home/myNetwork/devices'
+        response = requests.get(request_url)
+        if response.status_code == 200:
+            _LOGGER.info("Router (%s) appears to be a Smart Hub 1 ", self.router_ip)
+            return 1
+        # If both fail, assume that router is not a Smarthub
+        _LOGGER.error("Could not autodetect Smart Hub model at %s", self.router_ip)
+        _LOGGER.error("Please see the Readme for supported models")
