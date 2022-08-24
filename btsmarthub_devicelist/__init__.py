@@ -26,6 +26,7 @@ def update_label(source, labels):
 
 
 DEFAULT_IP = '192.168.1.254'
+REFERER_URL = 'http://' + DEFAULT_IP + '/basic_-_my_devices.htm'
 
 
 class BTSmartHub(object):
@@ -221,7 +222,7 @@ class BTSmartHub(object):
         """
         # make request to the server
         try:
-            response = requests.get(url_to_read)
+            response = requests.get(url_to_read, headers={"Referer":REFERER_URL})
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router times out")
             return
@@ -465,7 +466,7 @@ class BTSmartHub(object):
         # First try to determine if router is Smarthub 2
         try:
             request_url = 'http://' + self.router_ip + '/cgi/cgi_basicMyDevice.js'
-            response = requests.get(request_url, timeout=wait_time)
+            response = requests.get(request_url, timeout=wait_time, headers={"Referer":REFERER_URL})
             response.raise_for_status()
             if response.status_code == 200:
                 _LOGGER.info("Router (%s) appears to be a Smart Hub 2 ", self.router_ip)
@@ -477,7 +478,7 @@ class BTSmartHub(object):
                           e.response.status_code)
             try:
                 request_url = 'http://' + self.router_ip + '/gui/#/home/myNetwork/devices'
-                response = requests.get(request_url)
+                response = requests.get(request_url, headers={"Referer":REFERER_URL})
                 response.raise_for_status()
                 if response.status_code == 200:
                     _LOGGER.info("Router (%s) appears to be a Smart Hub 1 ", self.router_ip)
