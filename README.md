@@ -35,6 +35,6 @@ $ pip install btsmarthub_devicelist
 from btsmarthub_devicelist import BTSmartHub
 smarthub = BTSmartHub(router_ip='192.168.1.254', smarthub_model=2)
 device_list = smarthub.get_devicelist(only_active_devices=True, include_connections=True)
-print(devicelist)
+print(device_list)
 ```
 

@@ -44,6 +44,8 @@ class BTSmartHub(object):
         else:
             self.smarthub_model = smarthub_model
 
+        self.referer = "http://{}/basic_-_my_devices.htm".format(self.router_ip)
+
     def get_devicelist(self, only_active_devices=None,include_connections=None):
 
         if only_active_devices is None:
@@ -221,7 +223,7 @@ class BTSmartHub(object):
         """
         # make request to the server
         try:
-            response = requests.get(url_to_read)
+            response = requests.get(url_to_read, headers={'Referer': self.referer})
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router times out")
             return
@@ -318,7 +320,7 @@ class BTSmartHub(object):
             # load the disks and stations...so we can enrich data.
             request_url = 'http://' + self.router_ip + '/cgi/cgi_owl.js'
             # use common method to pull body data for our url
-            owl_body = self.get_body_content(request_url)
+            owl_body = self.get_body_content(request_url, headers={'Referer': self.referer})
 
 
         # labels in the extensions jscript
