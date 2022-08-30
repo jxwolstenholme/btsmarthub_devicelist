@@ -333,7 +333,7 @@ class BTSmartHub(object):
             "sta_num", "connect_type", "connect_rssi", "model_name", "product_id",
             "node_lvid", "uptime", "connected_role", "connected_rootap", "linkrate", "node_num",
             "node_num_max", "linkmode", "sta_num_max", "cpuU", "cpuS", "cpuI", "memT", "memF", "memU", "proc_n",
-            "hub_status", "fud", "type", "lsd"]
+            "hub_status", "fud", "type", "lsd", "ether_speed", "ether_name"]
 
         # convert to json str
         json_data = self.extract_js_variable_to_json_string(owl_body, 'owl_tplg=', extension_labels)
