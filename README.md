@@ -1,4 +1,4 @@
-# BT Smarthub Device List v.0.2.1
+# BT Smarthub Device List v.0.2.2
 
 Python package allowing for a [BT Smart Hub or BT Smart Hub 2](https://www.productsandservices.bt.com/broadband/smart-hub/) router to be queried for devices.
 The package will output either all devices stored in the router's memory or just the devices connected at present
