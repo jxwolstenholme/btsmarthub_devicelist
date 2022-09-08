@@ -39,12 +39,12 @@ class BTSmartHub(object):
         else:
             self.router_ip = DEFAULT_IP
 
+        self.referer = "http://{}/basic_-_my_devices.htm".format(self.router_ip)
+
         if not smarthub_model:
             self.smarthub_model = self.autodetect_smarthub_model()
         else:
             self.smarthub_model = smarthub_model
-
-        self.referer = "http://{}/basic_-_my_devices.htm".format(self.router_ip)
 
     def get_devicelist(self, only_active_devices=None,include_connections=None):
 
@@ -467,7 +467,7 @@ class BTSmartHub(object):
         # First try to determine if router is Smarthub 2
         try:
             request_url = 'http://' + self.router_ip + '/cgi/cgi_basicMyDevice.js'
-            response = requests.get(request_url, timeout=wait_time)
+            response = requests.get(request_url, timeout=wait_time, headers={'Referer': self.referer})
             response.raise_for_status()
             if response.status_code == 200:
                 _LOGGER.info("Router (%s) appears to be a Smart Hub 2 ", self.router_ip)
