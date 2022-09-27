@@ -4,6 +4,7 @@ import logging
 
 import responses
 import requests
+from responses import matchers
 
 from btsmarthub_devicelist import BTSmartHub
 
@@ -26,11 +27,29 @@ class TestBTSmartHub(unittest.TestCase):
 
     def setup_fake_smarthub2(self):
         # initialise mock - make sure smarthub 2 is ok....
-        responses.add(responses.GET, 'http://smarthub2fakedrouter/cgi/cgi_basicMyDevice.js', status=200)
-        responses.add(responses.GET, 'http://smarthub2fakedrouter/cgi/cgi_owl.js', body=self.smarthubb2_cgi_owl_body,
-                      status=200)
-        responses.add(responses.GET, 'http://smarthub2fakedrouter/cgi/cgi_basicMyDevice.js',
-                      body=self.smarthubb2_cgi_basicMyDevice, status=200)
+        responses.add(
+            responses.GET,
+            'http://smarthub2fakedrouter/cgi/cgi_basicMyDevice.js',
+            status=200,
+            match=[matchers.header_matcher({'Referer':
+                'http://smarthub2fakedrouter/basic_-_my_devices.htm'})],
+        )
+        responses.add(
+            responses.GET,
+            'http://smarthub2fakedrouter/cgi/cgi_owl.js', 
+            body=self.smarthubb2_cgi_owl_body,
+            status=200,
+            match=[matchers.header_matcher({'Referer':
+                'http://smarthub2fakedrouter/basic_-_my_devices.htm'})],
+        )
+        responses.add(
+            responses.GET,
+            'http://smarthub2fakedrouter/cgi/cgi_basicMyDevice.js',
+            body=self.smarthubb2_cgi_basicMyDevice, 
+            status=200,
+            match=[matchers.header_matcher({'Referer':
+                'http://smarthub2fakedrouter/basic_-_my_devices.htm'})],
+        )
 
     @responses.activate
     def test_btsmarthub2_getdevicelist__no_active_flag_returns_only_active(self):
