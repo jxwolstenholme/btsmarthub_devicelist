@@ -320,7 +320,7 @@ class BTSmartHub(object):
             # load the disks and stations...so we can enrich data.
             request_url = 'http://' + self.router_ip + '/cgi/cgi_owl.js'
             # use common method to pull body data for our url
-            owl_body = self.get_body_content(request_url, headers={'Referer': self.referer})
+            owl_body = self.get_body_content(request_url)
 
 
         # labels in the extensions jscript
