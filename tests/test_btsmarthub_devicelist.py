@@ -4,6 +4,7 @@ import logging
 
 import responses
 import requests
+from responses import matchers
 
 from btsmarthub_devicelist import BTSmartHub
 
@@ -26,11 +27,45 @@ class TestBTSmartHub(unittest.TestCase):
 
     def setup_fake_smarthub2(self):
         # initialise mock - make sure smarthub 2 is ok....
-        responses.add(responses.GET, 'http://smarthub2fakedrouter/cgi/cgi_basicMyDevice.js', status=200)
-        responses.add(responses.GET, 'http://smarthub2fakedrouter/cgi/cgi_owl.js', body=self.smarthubb2_cgi_owl_body,
-                      status=200)
-        responses.add(responses.GET, 'http://smarthub2fakedrouter/cgi/cgi_basicMyDevice.js',
-                      body=self.smarthubb2_cgi_basicMyDevice, status=200)
+        responses.add(
+            responses.GET,
+            'http://smarthub2fakedrouter/cgi/cgi_basicMyDevice.js',
+            status=200,
+            match=[matchers.header_matcher({'Referer':
+                'http://smarthub2fakedrouter/basic_-_my_devices.htm'})],
+        )
+        responses.add(
+            responses.GET,
+            'http://smarthub2fakedrouter/cgi/cgi_owl.js', 
+            body=self.smarthubb2_cgi_owl_body,
+            status=200,
+            match=[matchers.header_matcher({'Referer':
+                'http://smarthub2fakedrouter/basic_-_my_devices.htm'})],
+        )
+        responses.add(
+            responses.GET,
+            'http://smarthub2fakedrouter/cgi/cgi_basicMyDevice.js',
+            body=self.smarthubb2_cgi_basicMyDevice, 
+            status=200,
+            match=[matchers.header_matcher({'Referer':
+                'http://smarthub2fakedrouter/basic_-_my_devices.htm'})],
+        )
+
+    @responses.activate
+    def test_btsmarthub2_getdevicelist__returns_correct_values(self):
+        self.setup_fake_smarthub2()
+
+        devices = BTSmartHub(router_ip='smarthub2fakedrouter').get_devicelist()
+
+        expected = {
+            'name': 'TV Panasonic Lounge ',
+            'UserHostName': 'PaulGousiPadPro',
+            'PhysAddress': 'DC:A4:FF:FF:FF:FF',
+            'IPAddress': '10.1.8.201',
+            'Active': True,
+        }
+
+        self.assertEqual(devices[0], expected)
 
     @responses.activate
     def test_btsmarthub2_getdevicelist__no_active_flag_returns_only_active(self):
@@ -77,12 +112,24 @@ class TestBTSmartHub(unittest.TestCase):
             if device.get("UserHostName") == "FAKEDDISKPAR":
                 self.assertEqual("Unknown", device.get("ParentName"))
 
+        expected = {
+            'name': 'TV Panasonic Lounge ',
+            'UserHostName': 'PaulGousiPadPro',
+            'PhysAddress': 'DC:A4:FF:FF:FF:FF',
+            'IPAddress': '10.1.8.201',
+            'Active': True,
+            'ConnectionType': '5G',
+            'ParentPhysAddress': '4C:1B:FF:FF:D9:FF',
+            'ParentName': 'Living room',
+        }
+
+        self.assertEqual(all_devices[0], expected)
+
 
 
     @responses.activate
     def test_disk_dictionary(self):
         self.setup_fake_smarthub2()
-
 
         disks = BTSmartHub(router_ip='smarthub2fakedrouter').get_disks()
         # test data has 2 disks and a router.

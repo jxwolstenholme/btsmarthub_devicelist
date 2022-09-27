@@ -432,16 +432,17 @@ class BTSmartHub(object):
                 device['ParentName'] = parent_name
 
         # shrink them down
-        if only_active_devices is False:
-            return self.parse_devicelist(devices)
-        else:
+        devices = self.parse_devicelist(devices)
+        if only_active_devices is True:
             return [device for device in devices if device.get('Active')]
+
+        return devices
 
     @staticmethod
     def parse_devicelist(device_list):
         """Returns relevant keys for devices in the router memory"""
 
-        keys = {'UserHostName', 'PhysAddress', 'IPAddress', 'Active',
+        keys = {'name', 'UserHostName', 'PhysAddress', 'IPAddress', 'Active',
                 'ConnectionType', 'ParentPhysAddress', 'ParentName'}
 
         # keys = {'UserHostName', 'PhysAddress', 'IPAddress', 'Active'}
