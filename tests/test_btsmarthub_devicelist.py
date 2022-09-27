@@ -52,6 +52,22 @@ class TestBTSmartHub(unittest.TestCase):
         )
 
     @responses.activate
+    def test_btsmarthub2_getdevicelist__returns_correct_values(self):
+        self.setup_fake_smarthub2()
+
+        devices = BTSmartHub(router_ip='smarthub2fakedrouter').get_devicelist()
+
+        expected = {
+            'name': 'TV Panasonic Lounge ',
+            'UserHostName': 'PaulGousiPadPro',
+            'PhysAddress': 'DC:A4:FF:FF:FF:FF',
+            'IPAddress': '10.1.8.201',
+            'Active': True,
+        }
+
+        self.assertEqual(devices[0], expected)
+
+    @responses.activate
     def test_btsmarthub2_getdevicelist__no_active_flag_returns_only_active(self):
         self.setup_fake_smarthub2()
 
@@ -96,12 +112,24 @@ class TestBTSmartHub(unittest.TestCase):
             if device.get("UserHostName") == "FAKEDDISKPAR":
                 self.assertEqual("Unknown", device.get("ParentName"))
 
+        expected = {
+            'name': 'TV Panasonic Lounge ',
+            'UserHostName': 'PaulGousiPadPro',
+            'PhysAddress': 'DC:A4:FF:FF:FF:FF',
+            'IPAddress': '10.1.8.201',
+            'Active': True,
+            'ConnectionType': '5G',
+            'ParentPhysAddress': '4C:1B:FF:FF:D9:FF',
+            'ParentName': 'Living room',
+        }
+
+        self.assertEqual(all_devices[0], expected)
+
 
 
     @responses.activate
     def test_disk_dictionary(self):
         self.setup_fake_smarthub2()
-
 
         disks = BTSmartHub(router_ip='smarthub2fakedrouter').get_disks()
         # test data has 2 disks and a router.
