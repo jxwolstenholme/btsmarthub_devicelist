@@ -138,8 +138,7 @@ class TestBTSmartHub(unittest.TestCase):
         self.assertTrue(1 == BTSmartHub(router_ip="smarthub1fakedrouter").autodetect_smarthub_model())
 
     def test_btsmarthub2_detection_neither_router_present(self):
-        self.assertRaises(requests.exceptions.HTTPError,
-                          BTSmartHub(router_ip="www.google.com").autodetect_smarthub_model())
+        self.assertTrue(None == BTSmartHub(router_ip="www.google.com").autodetect_smarthub_model())
 
 
 if __name__ == '__main__':
