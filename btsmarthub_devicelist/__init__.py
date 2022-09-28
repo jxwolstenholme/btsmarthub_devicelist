@@ -229,8 +229,6 @@ class BTSmartHub(object):
             return
         if response.status_code == 200:
             body = response.content.decode('utf-8')
-            # body strings are URI encoded
-            body = requests.utils.unquote(body)
         else:
             _LOGGER.error("Invalid response from Smart Hub: %s", response)
             _LOGGER.debug("It is likely that %s is the wrong router model", str(self.smarthub_model))
@@ -263,22 +261,16 @@ class BTSmartHub(object):
 
         # json likes double not single quotes
         cleaned_jscript_array = initial_jscript_array.replace("'", "\"")
+        cleaned_jscript_array = requests.utils.unquote(cleaned_jscript_array)
 
         return cleaned_jscript_array
 
-    def get_stations(self, owl_body=None):
+    def get_stations(self, owl_body):
         """
         Get the dict of stations (devices connected and info pertaining to how they connect)
         :param owl_body: The contents of the owl url - if not set we will look it up.
         :return: dictionary of stations mac -> station info.
         """
-
-        if owl_body is None:
-            # load the disks and stations...so we can enrich data.
-            request_url = 'http://' + self.router_ip + '/cgi/cgi_owl.js'
-            # use common method to pull body data for our url
-            owl_body = self.get_body_content(request_url)
-
 
         # labels in the extensions jscript
         extension_labels = [
@@ -308,20 +300,13 @@ class BTSmartHub(object):
         return station_dictionary
 
 
-    def get_disks(self, owl_body=None):
+    def get_disks(self, owl_body):
         """
         Get the set of disks (extenders) and the info on the router.
         Used to figure out who is connected to what.
         :param owl_body: if not set we will read from URL.
         :return: dict of mac address -> extender name.
         """
-
-        if owl_body is None:
-            # load the disks and stations...so we can enrich data.
-            request_url = 'http://' + self.router_ip + '/cgi/cgi_owl.js'
-            # use common method to pull body data for our url
-            owl_body = self.get_body_content(request_url)
-
 
         # labels in the extensions jscript
         extension_labels = [
