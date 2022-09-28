@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='btsmarthub_devicelist',
-    version='0.2.2',
+    version='0.2.3',
     packages=['btsmarthub_devicelist'],
     url='https://github.com/jxwolstenholme/btsmarthub_devicelist',
     license='MIT',
