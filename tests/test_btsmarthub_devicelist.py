@@ -17,6 +17,8 @@ class TestBTSmartHub(unittest.TestCase):
     smarthubb2_cgi_owl_body = ""
     smarthubb2_cgi_basicMyDevice = ""
 
+    maxDiff = None
+
     @classmethod
     def setUpClass(cls):
         """ Read some faked data into body strings so we can test without a router present"""
@@ -126,12 +128,36 @@ class TestBTSmartHub(unittest.TestCase):
         self.assertEqual(all_devices[0], expected)
 
 
+    @responses.activate
+    def test_btsmarthub2_getdevicelist_with_connection_details_special_characters(self):
+        with open('tests/fixtures/smarthub2/cgi_owl.special_chars.js', 'r') as file:
+            self.smarthubb2_cgi_owl_body = file.read()
+        with open('tests/fixtures/smarthub2/cgi_basicMyDevice.special_chars.js', 'r') as file:
+            self.smarthubb2_cgi_basicMyDevice = file.read()
+        self.setup_fake_smarthub2()
+
+        devices = BTSmartHub(router_ip='smarthub2fakedrouter').get_devicelist(include_connections=True)
+
+        expected = {
+            'name': 'Paul\'s TV',
+            'UserHostName': 'PaulGousiPadPro',
+            'PhysAddress': 'DC:A4:FF:FF:FF:FF',
+            'IPAddress': '10.1.8.201',
+            'Active': True,
+            'ConnectionType': '5G',
+            'ParentPhysAddress': '4C:1B:FF:FF:D9:FF',
+            'ParentName': 'Living room',
+        }
+
+        self.assertEqual(devices[0], expected)
+
+
 
     @responses.activate
     def test_disk_dictionary(self):
         self.setup_fake_smarthub2()
 
-        disks = BTSmartHub(router_ip='smarthub2fakedrouter').get_disks()
+        disks = BTSmartHub(router_ip='smarthub2fakedrouter').get_disks(self.smarthubb2_cgi_owl_body)
         # test data has 2 disks and a router.
         self.assertEqual(3, len(disks))
 
@@ -139,7 +165,7 @@ class TestBTSmartHub(unittest.TestCase):
     def test_stations_load(self):
         self.setup_fake_smarthub2()
 
-        stations = BTSmartHub(router_ip='smarthub2fakedrouter').get_stations()
+        stations = BTSmartHub(router_ip='smarthub2fakedrouter').get_stations(self.smarthubb2_cgi_owl_body)
 
         # test data has known count of stations...
         self.assertEqual(25, len(stations))
