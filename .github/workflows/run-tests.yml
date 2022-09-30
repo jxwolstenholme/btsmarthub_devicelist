@@ -1,0 +1,20 @@
+name: Run Tests
+on: [push]
+jobs:
+  Run-Tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.7", "3.8", "3.9", "3.10"]
+
+    steps:
+      - name: Checkout out repo
+        uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install tox and any other packages
+        run: pip install tox
+      - name: Run tox
+        run: tox -e py
